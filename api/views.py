@@ -2,6 +2,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser  # <- Yeh import zaroori hai
 from .models import Student, ContactInquiry, FeePayment, SubjectMark
 from .serializers import (
     StudentSerializer, 
@@ -35,6 +36,7 @@ def submit_inquiry(request):
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all().order_by('-created_at')
     serializer_class = StudentSerializer
+    parser_classes = (MultiPartParser, FormParser)  # <- Image/File handle karne ke liye
 
 class FeePaymentViewSet(viewsets.ModelViewSet):
     queryset = FeePayment.objects.all()
@@ -43,6 +45,7 @@ class FeePaymentViewSet(viewsets.ModelViewSet):
 class SubjectMarkViewSet(viewsets.ModelViewSet):
     queryset = SubjectMark.objects.all()
     serializer_class = SubjectMarkSerializer
+    parser_classes = (MultiPartParser, FormParser)  # <- Test copy PDF/Image handle karne ke liye
 
 class ContactInquiryViewSet(viewsets.ModelViewSet):
     queryset = ContactInquiry.objects.all().order_by('-created_at')
