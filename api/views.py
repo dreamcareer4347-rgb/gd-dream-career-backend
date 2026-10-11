@@ -1,7 +1,14 @@
+# File path: backend/api/views.py
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Student, ContactInquiry
-from .serializers import StudentSerializer, ContactInquirySerializer
+from rest_framework import viewsets
+from .models import Student, ContactInquiry, FeePayment, SubjectMark
+from .serializers import (
+    StudentSerializer, 
+    ContactInquirySerializer, 
+    FeePaymentSerializer, 
+    SubjectMarkSerializer
+)
 
 @api_view(['POST'])
 def get_student_performance(request):
@@ -22,3 +29,21 @@ def submit_inquiry(request):
         serializer.save()
         return Response({"success": True, "message": "Inquiry submitted successfully!"})
     return Response({"success": False, "errors": serializer.errors}, status=400)
+
+
+# --- Admin ViewSets for Full Control (Add, Edit, Delete Students & Records) ---
+class StudentViewSet(viewsets.ModelViewSet):
+    queryset = Student.objects.all().order_by('-created_at')
+    serializer_class = StudentSerializer
+
+class FeePaymentViewSet(viewsets.ModelViewSet):
+    queryset = FeePayment.objects.all()
+    serializer_class = FeePaymentSerializer
+
+class SubjectMarkViewSet(viewsets.ModelViewSet):
+    queryset = SubjectMark.objects.all()
+    serializer_class = SubjectMarkSerializer
+
+class ContactInquiryViewSet(viewsets.ModelViewSet):
+    queryset = ContactInquiry.objects.all().order_by('-created_at')
+    serializer_class = ContactInquirySerializer
