@@ -1,7 +1,7 @@
 # File path: backend/api/views.py
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.parsers import MultiPartParser, FormParser  # <- Yeh import zaroori hai
 from .models import Student, ContactInquiry, FeePayment, SubjectMark
 from .serializers import (
@@ -37,6 +37,19 @@ class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all().order_by('-created_at')
     serializer_class = StudentSerializer
     parser_classes = (MultiPartParser, FormParser)  # <- Image/File handle karne ke liye
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                self.perform_create(serializer)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                print("CLOUDINARY/DB SAVE ERROR:", str(e))
+                return Response({"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        print("SERIALIZER ERRORS:", serializer.errors)
+        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class FeePaymentViewSet(viewsets.ModelViewSet):
     queryset = FeePayment.objects.all()
