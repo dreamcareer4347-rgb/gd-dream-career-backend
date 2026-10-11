@@ -93,7 +93,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', 'Root'),
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', 'xsfnfvqk'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY', '313968178183668'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', 'dA_q-2re7onevrajcPhO3IyzPVI'),
 }
