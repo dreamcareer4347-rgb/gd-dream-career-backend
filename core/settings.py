@@ -112,10 +112,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --- CLOUDINARY MEDIA STORAGE CONFIGURATION ---
+# --- CLOUDINARY MEDIA STORAGE CONFIGURATION ---
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('Root'),
-    'API_KEY': os.getenv('313968178183668'),
-    'API_SECRET': os.getenv('dA_q-2re7onevrajcPhO3IyzPVI'),
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', 'Root'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY', '313968178183668'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', 'dA_q-2re7onevrajcPhO3IyzPVI'),
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
