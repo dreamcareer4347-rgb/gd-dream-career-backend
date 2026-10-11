@@ -36,16 +36,18 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage', # <- Staticfiles aur Cloudinary se pehle hona zaroori hai
     'django.contrib.staticfiles',
+    'cloudinary', # <- Cloudinary app
     'rest_framework',
     'corsheaders',
     'api'
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # <- Sabse upar rakhein
+    'corsheaders.middleware.CorsMiddleware', # <- Sabse upar
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # <- Render par static files serve karne ke liye zaroori hai
+    'whitenoise.middleware.WhiteNoiseMiddleware', # <- Render par static files ke liye
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -109,7 +111,15 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- MEDIA FILES CONFIGURATION (Student Photos & Test Copies) ---
+# --- CLOUDINARY MEDIA STORAGE CONFIGURATION ---
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('Root'),
+    'API_KEY': os.getenv('313968178183668'),
+    'API_SECRET': os.getenv('dA_q-2re7onevrajcPhO3IyzPVI'),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
