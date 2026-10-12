@@ -17,12 +17,15 @@ def get_student_performance(request):
     roll_no = request.data.get('roll_number')
     pin = request.data.get('result_pin')
 
+    if not roll_no or not pin:
+        return Response({"success": False, "message": "Roll Number aur Result PIN enter karna anivarya hai."}, status=200)
+
     try:
-        student = Student.objects.get(roll_number=roll_no, result_pin=pin)
+        student = Student.objects.get(roll_number=roll_no.strip(), result_pin=pin.strip())
         serializer = StudentSerializer(student)
-        return Response({"success": True, "data": serializer.data})
+        return Response({"success": True, "data": serializer.data}, status=200)
     except Student.DoesNotExist:
-        return Response({"success": False, "message": "Invalid Roll Number or PIN"}, status=400)
+        return Response({"success": False, "message": "Galat Roll Number ya Result PIN! Kripya sahi detail dalein."}, status=200)
 
 @api_view(['POST'])
 def submit_inquiry(request):
@@ -61,7 +64,7 @@ class SubjectMarkViewSet(viewsets.ModelViewSet):
     serializer_class = SubjectMarkSerializer
     parser_classes = (MultiPartParser, FormParser)
 
-    # Naya action jo database se binary file fetch karke view/download karayega
+    # Action to fetch binary file stored inside Neon PostgreSQL database
     @action(detail=True, methods=['get'])
     def download_file(self, request, pk=None):
         instance = self.get_object()
