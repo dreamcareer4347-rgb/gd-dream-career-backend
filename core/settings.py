@@ -25,15 +25,7 @@ SECRET_KEY = os.getenv(
 # Local development and Render production settings
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.getenv(
-        "ALLOWED_HOSTS",
-        "localhost,127.0.0.1,.onrender.com"
-    ).split(",")
-    if host.strip()
-]
-
+ALLOWED_HOSTS = ["*"]
 # --------------------------------------------------
 # CLOUDINARY CONFIGURATION
 # --------------------------------------------------
