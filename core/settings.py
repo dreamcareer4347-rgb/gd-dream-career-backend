@@ -14,9 +14,9 @@ load_dotenv(BASE_DIR / '.env')
 
 # Cloudinary explicit configuration SDK
 cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME', 'Root'),
-    api_key=os.getenv('CLOUDINARY_API_KEY', '313968178183668'),
-    api_secret=os.getenv('CLOUDINARY_API_SECRET', 'dA_q-2re7onevrajcPhO3IyzPVI'),
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
 
@@ -93,9 +93,9 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', 'xsfnfvqk'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY', '313968178183668'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', 'dA_q-2re7onevrajcPhO3IyzPVI'),
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
 STORAGES = {
