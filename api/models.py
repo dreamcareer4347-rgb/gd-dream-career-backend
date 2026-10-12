@@ -18,24 +18,24 @@ class Student(models.Model):
     written_performance_score = models.CharField(max_length=20, default="85% (Good)")
     math_improvement_score = models.CharField(max_length=20, default="92% (Excellent)")
     
-    # Overall Fee Summary
-    total_fee = models.IntegerField(default=12000)
-    paid_fee = models.IntegerField(default=10000)
-    due_fee = models.IntegerField(default=2000)
-    fee_status = models.CharField(max_length=20, default="Partial Paid")
+    # Overall Fee Summary (Monthly Basis Defaults)
+    total_fee = models.IntegerField(default=1000)  # Standard Monthly Fee
+    paid_fee = models.IntegerField(default=0)
+    due_fee = models.IntegerField(default=1000)
+    fee_status = models.CharField(max_length=20, default="Due Pending")
     
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} ({self.roll_number})"
 
-# --- Naya Model: Monthly Fee Transaction History ---
+# --- Monthly Fee Transaction History ---
 class FeePayment(models.Model):
     student = models.ForeignKey(Student, related_name='fee_history', on_delete=models.CASCADE)
-    month_name = models.CharField(max_length=50) # e.g. "January 2026"
+    month_name = models.CharField(max_length=50)
     amount_paid = models.IntegerField()
     payment_date = models.DateField()
-    payment_mode = models.CharField(max_length=50, default="Cash") # Cash / UPI / Online
+    payment_mode = models.CharField(max_length=50, default="Cash")
     receipt_note = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
@@ -47,7 +47,10 @@ class SubjectMark(models.Model):
     max_marks = models.IntegerField(default=100)
     obtained_marks = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default="Pass")
-    test_copy = models.FileField(upload_to='test_copies/', blank=True, null=True)
+    
+    # Files stored directly as binary data inside Neon PostgreSQL Database
+    test_copy = models.BinaryField(blank=True, null=True)
+    test_copy_name = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return f"{self.subject_name} - {self.student.name}"
