@@ -22,8 +22,42 @@ def get_student_performance(request):
 
     try:
         student = Student.objects.get(roll_number=roll_no.strip(), result_pin=pin.strip())
+        
+        # --- Dynamic Performance Calculation from Test Marks / Subjects ---
+        subjects = student.subjects.all()
+        
+        def get_skill_avg(keywords):
+            matched = [s for s in subjects if any(kw in s.subject_name.lower() for kw in keywords)]
+            if not matched:
+                return None
+            total_obtained = sum(s.obtained_marks for s in matched)
+            total_max = sum(s.max_marks for s in matched)
+            if total_max == 0:
+                return None
+            return round((total_obtained / total_max) * 100)
+
+        # Calculate dynamic scores based on subject name keywords
+        eng_speaking_pct = get_skill_avg(['speaking', 'english speaking', 'convers'])
+        deep_eng_pct = get_skill_avg(['deep', 'grammar', 'literature', 'deep english', 'deep learning'])
+        written_pct = get_skill_avg(['written', 'writing', 'essay', 'spelling'])
+        math_pct = get_skill_avg(['math', 'mathematics', 'calculation', 'arithmetic'])
+
+        # Serialize student data
         serializer = StudentSerializer(student)
-        return Response({"success": True, "data": serializer.data}, status=200)
+        data = dict(serializer.data)
+
+        # Override default score strings with dynamic calculated values if test records exist
+        if eng_speaking_pct is not None:
+            data['english_speaking_score'] = f"{eng_speaking_pct}% (Fluent)" if eng_speaking_pct >= 75 else f"{eng_speaking_pct}% (Good)"
+        if deep_eng_pct is not None:
+            data['deep_learning_score'] = f"{deep_eng_pct}% (Advanced)" if deep_eng_pct >= 75 else f"{deep_eng_pct}% (Improving)"
+        if written_pct is not None:
+            data['written_performance_score'] = f"{written_pct}% (Good)" if written_pct >= 75 else f"{written_pct}% (Steady)"
+        if math_pct is not None:
+            data['math_improvement_score'] = f"{math_pct}% (Excellent)" if math_pct >= 75 else f"{math_pct}% (Growing)"
+
+        return Response({"success": True, "data": data}, status=200)
+        
     except Student.DoesNotExist:
         return Response({"success": False, "message": "Galat Roll Number ya Result PIN! Kripya sahi detail dalein."}, status=200)
 

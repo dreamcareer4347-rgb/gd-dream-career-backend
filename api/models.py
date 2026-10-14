@@ -12,13 +12,13 @@ class Student(models.Model):
     total_percentage = models.CharField(max_length=10, default="88%")
     student_photo = models.ImageField(upload_to='student_photos/', blank=True, null=True)
     
-    # Specific Performance Pillars
+    # Specific Performance Pillars (Chahein toh admin se ya dynamic calculate kar sakte hain)
     english_speaking_score = models.CharField(max_length=20, default="88% (Fluent)")
     deep_learning_score = models.CharField(max_length=20, default="90% (Advanced)")
     written_performance_score = models.CharField(max_length=20, default="85% (Good)")
     math_improvement_score = models.CharField(max_length=20, default="92% (Excellent)")
     
-    # Overall Fee Summary (Monthly Basis Defaults)
+    # Overall Fee Summary
     total_fee = models.IntegerField(default=1000)  # Standard Monthly Fee
     paid_fee = models.IntegerField(default=0)
     due_fee = models.IntegerField(default=1000)
@@ -48,8 +48,8 @@ class SubjectMark(models.Model):
     obtained_marks = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default="Pass")
     
-    # Files stored directly as binary data inside Neon PostgreSQL Database
-    test_copy = models.BinaryField(blank=True, null=True)
+    # Test copy file or cloudinary storage link for evaluation copy
+    test_copy = models.FileField(upload_to='test_copies/', blank=True, null=True)
     test_copy_name = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
