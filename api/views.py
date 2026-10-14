@@ -22,8 +22,6 @@ def get_student_performance(request):
 
     try:
         student = Student.objects.get(roll_number=roll_no.strip(), result_pin=pin.strip())
-        
-        # --- Dynamic Performance Calculation from Test Marks / Subjects ---
         subjects = student.subjects.all()
         
         def get_skill_avg(keywords):
@@ -46,22 +44,30 @@ def get_student_performance(request):
         serializer = StudentSerializer(student)
         data = dict(serializer.data)
 
-        # Override default score strings with dynamic calculated values if test records exist
+        # Force override: Agar marks hain toh calculate karo, nahi toh "Not Uploaded Yet" dikhao
         if eng_speaking_pct is not None:
             status_text = "Fluent" if eng_speaking_pct >= 80 else ("Good" if eng_speaking_pct >= 60 else "Improving")
             data['english_speaking_score'] = f"{eng_speaking_pct}% ({status_text})"
+        else:
+            data['english_speaking_score'] = "Not Uploaded Yet"
             
         if deep_eng_pct is not None:
             status_text = "Advanced" if deep_eng_pct >= 80 else ("Intermediate" if deep_eng_pct >= 60 else "Basic")
             data['deep_learning_score'] = f"{deep_eng_pct}% ({status_text})"
+        else:
+            data['deep_learning_score'] = "Not Uploaded Yet"
             
         if written_pct is not None:
             status_text = "Good" if written_pct >= 80 else ("Steady" if written_pct >= 60 else "Needs Practice")
             data['written_performance_score'] = f"{written_pct}% ({status_text})"
+        else:
+            data['written_performance_score'] = "Not Uploaded Yet"
             
         if math_pct is not None:
             status_text = "Excellent" if math_pct >= 80 else ("Growing" if math_pct >= 60 else "Average")
             data['math_improvement_score'] = f"{math_pct}% ({status_text})"
+        else:
+            data['math_improvement_score'] = "Not Uploaded Yet"
 
         return Response({"success": True, "data": data}, status=200)
         
