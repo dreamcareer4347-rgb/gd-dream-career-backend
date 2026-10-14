@@ -1,5 +1,5 @@
 # File path: backend/api/models.py
-from django.db import models
+from django.db import models # <--- Yeh sahi hai
 
 class Student(models.Model):
     name = models.CharField(max_length=100)
@@ -9,17 +9,17 @@ class Student(models.Model):
     student_class = models.CharField(max_length=50)
     attendance = models.CharField(max_length=10, default="95%")
     grade = models.CharField(max_length=5, default="A+")
-    total_percentage = models.CharField(max_length=10, default="88%")
+    total_percentage = models.CharField(max_length=10, default="Pending")
     student_photo = models.ImageField(upload_to='student_photos/', blank=True, null=True)
     
-    # Specific Performance Pillars (Chahein toh admin se ya dynamic calculate kar sakte hain)
-    english_speaking_score = models.CharField(max_length=20, default="88% (Fluent)")
-    deep_learning_score = models.CharField(max_length=20, default="90% (Advanced)")
-    written_performance_score = models.CharField(max_length=20, default="85% (Good)")
-    math_improvement_score = models.CharField(max_length=20, default="92% (Excellent)")
+    # Specific Performance Pillars Defaults
+    english_speaking_score = models.CharField(max_length=50, default="Not Uploaded Yet")
+    deep_learning_score = models.CharField(max_length=50, default="Not Uploaded Yet")
+    written_performance_score = models.CharField(max_length=50, default="Not Uploaded Yet")
+    math_improvement_score = models.CharField(max_length=50, default="Not Uploaded Yet")
     
     # Overall Fee Summary
-    total_fee = models.IntegerField(default=1000)  # Standard Monthly Fee
+    total_fee = models.IntegerField(default=1000)
     paid_fee = models.IntegerField(default=0)
     due_fee = models.IntegerField(default=1000)
     fee_status = models.CharField(max_length=20, default="Due Pending")
@@ -48,7 +48,6 @@ class SubjectMark(models.Model):
     obtained_marks = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default="Pass")
     
-    # Test copy file or cloudinary storage link for evaluation copy
     test_copy = models.FileField(upload_to='test_copies/', blank=True, null=True)
     test_copy_name = models.CharField(max_length=255, blank=True, null=True)
 
