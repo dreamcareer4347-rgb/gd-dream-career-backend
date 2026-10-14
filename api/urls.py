@@ -7,7 +7,8 @@ from .views import (
     StudentViewSet, 
     FeePaymentViewSet, 
     SubjectMarkViewSet, 
-    ContactInquiryViewSet
+    ContactInquiryViewSet,
+    verify_admin_login
 )
 
 router = DefaultRouter()
@@ -23,4 +24,5 @@ urlpatterns = [
     
     # Naye automated CRUD endpoints (admin panel ke liye)
     path('', include(router.urls)),
+    path('admin-login/', verify_admin_login, name='admin-login'),
 ]

@@ -1,5 +1,5 @@
 # File path: backend/api/models.py
-from django.db import models # <--- Yeh sahi hai
+from django.db import models
 
 class Student(models.Model):
     name = models.CharField(max_length=100)
@@ -28,6 +28,14 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.roll_number})"
+
+# --- Admin Database Authentication Model ---
+class AdminCredential(models.Model):
+    username = models.CharField(max_length=50, unique=True)
+    secret_pin = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"Admin: {self.username}"
 
 # --- Monthly Fee Transaction History ---
 class FeePayment(models.Model):

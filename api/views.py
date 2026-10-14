@@ -4,13 +4,27 @@ from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.http import HttpResponse
-from .models import Student, ContactInquiry, FeePayment, SubjectMark
+from .models import Student, ContactInquiry, FeePayment, SubjectMark, AdminCredential
 from .serializers import (
     StudentSerializer, 
     ContactInquirySerializer, 
     FeePaymentSerializer, 
     SubjectMarkSerializer
 )
+
+@api_view(['POST'])
+def verify_admin_login(request):
+    username = request.data.get('username')
+    pin = request.data.get('secret_pin')
+
+    if not username or not pin:
+        return Response({"success": False, "message": "Username aur Secret PIN enter karna anivarya hai."}, status=200)
+
+    try:
+        admin = AdminCredential.objects.get(username=username.strip(), secret_pin=pin.strip())
+        return Response({"success": True, "message": "Login successful!"}, status=200)
+    except AdminCredential.DoesNotExist:
+        return Response({"success": False, "message": "Galat Username ya Secret PIN! Kripya sahi detail dalein."}, status=200)
 
 @api_view(['POST'])
 def get_student_performance(request):
