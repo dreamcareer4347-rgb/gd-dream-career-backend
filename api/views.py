@@ -48,17 +48,14 @@ def get_student_performance(request):
                 return None
             return round((total_obtained / total_max) * 100)
 
-        # Calculate dynamic scores based on selected dropdown subject names
         eng_speaking_pct = get_skill_avg(['english speaking'])
         deep_eng_pct = get_skill_avg(['deep english learning'])
         written_pct = get_skill_avg(['written performance'])
         math_pct = get_skill_avg(['math improvement'])
 
-        # Serialize student data
         serializer = StudentSerializer(student)
         data = dict(serializer.data)
 
-        # Force override: Agar marks hain toh calculate karo, nahi toh "Not Uploaded Yet" dikhao
         if eng_speaking_pct is not None:
             status_text = "Fluent" if eng_speaking_pct >= 80 else ("Good" if eng_speaking_pct >= 60 else "Improving")
             data['english_speaking_score'] = f"{eng_speaking_pct}% ({status_text})"
@@ -141,6 +138,15 @@ class SubjectMarkViewSet(viewsets.ModelViewSet):
         response = HttpResponse(file_data, content_type=content_type)
         response['Content-Disposition'] = f'inline; filename="{file_name}"'
         return response
+
+    # Test copy file ko specifically delete / clear karne ke liye action
+    @action(detail=True, methods=['post', 'delete'])
+    def delete_test_copy(self, request, pk=None):
+        instance = self.get_object()
+        instance.test_copy = None
+        instance.test_copy_name = None
+        instance.save()
+        return Response({"success": True, "message": "Test copy deleted successfully!"}, status=200)
 
 class ContactInquiryViewSet(viewsets.ModelViewSet):
     queryset = ContactInquiry.objects.all().order_by('-created_at')
