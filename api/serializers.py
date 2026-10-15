@@ -1,5 +1,7 @@
 # File path: backend/api/serializers.py
 from rest_framework import serializers
+from PIL import Image
+import io
 from .models import Student, SubjectMark, ContactInquiry, FeePayment
 
 class FeePaymentSerializer(serializers.ModelSerializer):
@@ -17,16 +19,57 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         file_obj = validated_data.pop('test_copy', None)
         if file_obj:
-            # Binary conversion safely handled for DB
-            validated_data['test_copy'] = file_obj.read()
-            validated_data['test_copy_name'] = getattr(file_obj, 'name', 'document.pdf')
+            file_name = getattr(file_obj, 'name', 'document.jpg')
+            
+            # Agar upload ki gayi file image hai, toh use automatically PDF me convert kar do
+            if file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp')):
+                try:
+                    image = Image.open(file_obj)
+                    if image.mode == 'RGBA':
+                        image = image.convert('RGB')
+                    
+                    pdf_io = io.BytesIO()
+                    image.save(pdf_io, format='PDF')
+                    validated_data['test_copy'] = pdf_io.getvalue()
+                    
+                    # File ka naam automatically .pdf me badal do
+                    base_name = file_name.rsplit('.', 1)[0]
+                    validated_data['test_copy_name'] = f"{base_name}_test_copy.pdf"
+                except Exception as e:
+                    # Agar conversion me koi issue aaye toh fallback format me save ho jaye
+                    validated_data['test_copy'] = file_obj.read()
+                    validated_data['test_copy_name'] = file_name
+            else:
+                # Agar pehle se hi PDF hai toh waise hi save kar lo
+                validated_data['test_copy'] = file_obj.read()
+                validated_data['test_copy_name'] = file_name
+                
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         file_obj = validated_data.pop('test_copy', None)
         if file_obj:
-            instance.test_copy = file_obj.read()
-            instance.test_copy_name = getattr(file_obj, 'name', 'document.pdf')
+            file_name = getattr(file_obj, 'name', 'document.jpg')
+            
+            if file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp')):
+                try:
+                    image = Image.open(file_obj)
+                    if image.mode == 'RGBA':
+                        image = image.convert('RGB')
+                    
+                    pdf_io = io.BytesIO()
+                    image.save(pdf_io, format='PDF')
+                    instance.test_copy = pdf_io.getvalue()
+                    
+                    base_name = file_name.rsplit('.', 1)[0]
+                    instance.test_copy_name = f"{base_name}_test_copy.pdf"
+                except Exception as e:
+                    instance.test_copy = file_obj.read()
+                    instance.test_copy_name = file_name
+            else:
+                instance.test_copy = file_obj.read()
+                instance.test_copy_name = file_name
+                
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
