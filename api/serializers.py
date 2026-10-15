@@ -10,6 +10,7 @@ class FeePaymentSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'month_name', 'amount_paid', 'payment_date', 'payment_mode', 'receipt_note']
 
 class SubjectMarkSerializer(serializers.ModelSerializer):
+    # Multiple files support ke liye list field ya handle karna
     test_copy = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
@@ -17,59 +18,95 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'subject_name', 'max_marks', 'obtained_marks', 'status', 'test_copy', 'test_copy_name']
 
     def create(self, validated_data):
-        file_obj = validated_data.pop('test_copy', None)
-        if file_obj:
-            file_name = getattr(file_obj, 'name', 'document.jpg')
-            
-            # Agar upload ki gayi file image hai, toh use automatically PDF me convert kar do
-            if file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp')):
-                try:
-                    image = Image.open(file_obj)
-                    if image.mode == 'RGBA':
-                        image = image.convert('RGB')
-                    
-                    pdf_io = io.BytesIO()
-                    image.save(pdf_io, format='PDF')
-                    validated_data['test_copy'] = pdf_io.getvalue()
-                    
-                    # File ka naam automatically .pdf me badal do
-                    base_name = file_name.rsplit('.', 1)[0]
-                    validated_data['test_copy_name'] = f"{base_name}_test_copy.pdf"
-                except Exception as e:
-                    # Agar conversion me koi issue aaye toh fallback format me save ho jaye
-                    validated_data['test_copy'] = file_obj.read()
-                    validated_data['test_copy_name'] = file_name
-            else:
-                # Agar pehle se hi PDF hai toh waise hi save kar lo
-                validated_data['test_copy'] = file_obj.read()
-                validated_data['test_copy_name'] = file_name
+        # Request se saari uploaded files nikalne ke liye
+        request = self.context.get('request')
+        uploaded_files = request.FILES.getlist('test_copy') if request else []
+        
+        # Agar request context se na mile toh validated_data se single file lo
+        single_file = validated_data.pop('test_copy', None)
+        if not uploaded_files and single_file:
+            uploaded_files = [single_file]
+
+        if uploaded_files:
+            try:
+                images = []
+                base_name = "test_copy"
                 
+                for f in uploaded_files:
+                    fname = getattr(f, 'name', 'doc.jpg')
+                    base_name = fname.rsplit('.', 1)[0]
+                    
+                    if fname.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp')):
+                        img = Image.open(f)
+                        if img.mode == 'RGBA':
+                            img = img.convert('RGB')
+                        images.append(img)
+                    elif fname.lower().endswith('.pdf'):
+                        # Agar user ne PDF upload kiya hai toh usko waise hi handle kar lo (ya first file rakho)
+                        validated_data['test_copy'] = f.read()
+                        validated_data['test_copy_name'] = fname
+                        return super().create(validated_data)
+
+                if images:
+                    # Agar multiple images hain, toh sabko ek single PDF me combine kar do
+                    pdf_io = io.BytesIO()
+                    images[0].save(
+                        pdf_io, 
+                        format='PDF', 
+                        save_all=True, 
+                        append_images=images[1:]
+                    )
+                    validated_data['test_copy'] = pdf_io.getvalue()
+                    validated_data['test_copy_name'] = f"{base_name}_combined_copy.pdf"
+                else:
+                    if single_file:
+                        validated_data['test_copy'] = single_file.read()
+                        validated_data['test_copy_name'] = getattr(single_file, 'name', 'document.pdf')
+            except Exception as e:
+                if single_file:
+                    validated_data['test_copy'] = single_file.read()
+                    validated_data['test_copy_name'] = getattr(single_file, 'name', 'document.pdf')
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        file_obj = validated_data.pop('test_copy', None)
-        if file_obj:
-            file_name = getattr(file_obj, 'name', 'document.jpg')
-            
-            if file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp')):
-                try:
-                    image = Image.open(file_obj)
-                    if image.mode == 'RGBA':
-                        image = image.convert('RGB')
-                    
+        request = self.context.get('request')
+        uploaded_files = request.FILES.getlist('test_copy') if request else []
+        single_file = validated_data.pop('test_copy', None)
+        if not uploaded_files and single_file:
+            uploaded_files = [single_file]
+
+        if uploaded_files:
+            try:
+                images = []
+                base_name = "test_copy"
+                for f in uploaded_files:
+                    fname = getattr(f, 'name', 'doc.jpg')
+                    base_name = fname.rsplit('.', 1)[0]
+                    if fname.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp')):
+                        img = Image.open(f)
+                        if img.mode == 'RGBA':
+                            img = img.convert('RGB')
+                        images.append(img)
+                    elif fname.lower().endswith('.pdf'):
+                        instance.test_copy = f.read()
+                        instance.test_copy_name = fname
+                        return super().update(instance, validated_data)
+
+                if images:
                     pdf_io = io.BytesIO()
-                    image.save(pdf_io, format='PDF')
+                    images[0].save(pdf_io, format='PDF', save_all=True, append_images=images[1:])
                     instance.test_copy = pdf_io.getvalue()
-                    
-                    base_name = file_name.rsplit('.', 1)[0]
-                    instance.test_copy_name = f"{base_name}_test_copy.pdf"
-                except Exception as e:
-                    instance.test_copy = file_obj.read()
-                    instance.test_copy_name = file_name
-            else:
-                instance.test_copy = file_obj.read()
-                instance.test_copy_name = file_name
-                
+                    instance.test_copy_name = f"{base_name}_combined_copy.pdf"
+                else:
+                    if single_file:
+                        instance.test_copy = single_file.read()
+                        instance.test_copy_name = getattr(single_file, 'name', 'document.pdf')
+            except Exception as e:
+                if single_file:
+                    instance.test_copy = single_file.read()
+                    instance.test_copy_name = getattr(single_file, 'name', 'document.pdf')
+
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
