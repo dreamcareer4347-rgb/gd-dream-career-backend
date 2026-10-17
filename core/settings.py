@@ -218,3 +218,13 @@ CORS_ALLOWED_ORIGINS = [
 # --------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# settings.py me add / update karein
+
+# DEBUG ko Production par False rakhein (DEBUG=True hone par Django har SQL query ko RAM me cache karta hai)
+DEBUG = False
+
+# File uploads memory buffer optimize karne ke liye
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB (is se badi file temporary disk par jayegi, RAM override nahi hogi)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB
