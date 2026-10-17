@@ -52,6 +52,7 @@ def get_student_performance(request):
         written_pct = get_skill_avg(['written performance'])
         math_pct = get_skill_avg(['math improvement'])
 
+        # Pass request context so nested serializers can resolve file/Cloudinary URLs correctly
         serializer = StudentSerializer(student, context={'request': request})
         data = dict(serializer.data)
 
