@@ -3,7 +3,6 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.http import HttpResponse
 from .models import Student, ContactInquiry, FeePayment, SubjectMark, AdminCredential
 from .serializers import (
     StudentSerializer, 
@@ -121,23 +120,6 @@ class SubjectMarkViewSet(viewsets.ModelViewSet):
     queryset = SubjectMark.objects.all()
     serializer_class = SubjectMarkSerializer
     parser_classes = (MultiPartParser, FormParser)
-
-    @action(detail=True, methods=['get'])
-    def download_file(self, request, pk=None):
-        instance = self.get_object()
-        if not instance.test_copy:
-            return HttpResponse("File not found in database", status=404)
-        
-        file_data = bytes(instance.test_copy)
-        file_name = instance.test_copy_name or "document.pdf"
-        
-        content_type = "application/pdf"
-        if file_name.lower().endswith(('.jpg', '.jpeg', '.png')):
-            content_type = "image/jpeg"
-        
-        response = HttpResponse(file_data, content_type=content_type)
-        response['Content-Disposition'] = f'inline; filename="{file_name}"'
-        return response
 
     # Test copy file ko specifically delete / clear karne ke liye action
     @action(detail=True, methods=['post', 'delete'])

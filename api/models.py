@@ -56,8 +56,8 @@ class SubjectMark(models.Model):
     obtained_marks = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default="Pass")
     
-    # Binary storage for test copy files/PDFs
-    test_copy = models.BinaryField(blank=True, null=True)
+    # OPTIMIZED FOR FREE TIER: Cloudinary storage link instead of heavy DB Binary bytes
+    test_copy = models.FileField(upload_to='test_copies/', blank=True, null=True)
     test_copy_name = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
