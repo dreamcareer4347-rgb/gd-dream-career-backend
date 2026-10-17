@@ -19,9 +19,16 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
 
     def get_test_copy(self, obj):
         if obj.test_copy:
-            # Ensures absolute Cloudinary URL is returned cleanly to frontend
-            url = str(obj.test_copy.url if hasattr(obj.test_copy, 'url') else obj.test_copy)
-            return url
+            try:
+                # Agar test_copy ke paas .url attribute hai (Cloudinary / FileField)
+                if hasattr(obj.test_copy, 'url'):
+                    return str(obj.test_copy.url)
+                # Agar wo pehle se hi string URL hai
+                url_str = str(obj.test_copy)
+                if url_str.startswith('http'):
+                    return url_str
+            except Exception:
+                pass
         return None
 
     def create(self, validated_data):
@@ -34,7 +41,6 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
 
         if uploaded_files:
             try:
-                # If single PDF uploaded, assign directly
                 if len(uploaded_files) == 1 and getattr(uploaded_files[0], 'name', '').lower().endswith('.pdf'):
                     f = uploaded_files[0]
                     validated_data['test_copy'] = f
@@ -52,9 +58,6 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                             if img.mode == 'RGBA':
                                 img = img.convert('RGB')
                             images.append(img)
-                        elif fname.lower().endswith('.pdf'):
-                            # If mixed or multiple PDFs, take the first valid one or handle accordingly
-                            pass
 
                     if images:
                         pdf_io = io.BytesIO()
