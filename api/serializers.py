@@ -11,7 +11,6 @@ class FeePaymentSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'month_name', 'amount_paid', 'payment_date', 'payment_mode', 'receipt_note']
 
 class SubjectMarkSerializer(serializers.ModelSerializer):
-    # FileField banaya taaki admin panel se file accept ho sake
     test_copy = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
@@ -35,12 +34,19 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
             representation['test_copy'] = None
         return representation
 
-    def _process_uploaded_files(self, request, validated_data):
-        uploaded_files = request.FILES.getlist('test_copy') if request else []
-        
+    def _process_uploaded_files(self, request, validated_data, instance=None):
+        # Check if files were actually sent in the request
+        uploaded_files = request.FILES.getlist('test_copy') if (request and hasattr(request, 'FILES')) else []
         single_file = validated_data.pop('test_copy', None)
+
         if not uploaded_files and single_file:
             uploaded_files = [single_file]
+
+        # Agar koi nayi file nahi aayi hai, toh update ke waqt purani file ko hi retain rakhein
+        if not uploaded_files:
+            if instance and hasattr(instance, 'test_copy'):
+                validated_data['test_copy'] = instance.test_copy
+            return validated_data
 
         if uploaded_files:
             try:
@@ -90,12 +96,12 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        validated_data = self._process_uploaded_files(request, validated_data)
+        validated_data = self._process_uploaded_files(request, validated_data, instance=None)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         request = self.context.get('request')
-        validated_data = self._process_uploaded_files(request, validated_data)
+        validated_data = self._process_uploaded_files(request, validated_data, instance=instance)
         return super().update(instance, validated_data)
 
 class StudentSerializer(serializers.ModelSerializer):
