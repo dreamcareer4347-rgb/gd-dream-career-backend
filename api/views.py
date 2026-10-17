@@ -52,7 +52,7 @@ def get_student_performance(request):
         written_pct = get_skill_avg(['written performance'])
         math_pct = get_skill_avg(['math improvement'])
 
-        serializer = StudentSerializer(student)
+        serializer = StudentSerializer(student, context={'request': request})
         data = dict(serializer.data)
 
         if eng_speaking_pct is not None:
@@ -120,6 +120,28 @@ class SubjectMarkViewSet(viewsets.ModelViewSet):
     queryset = SubjectMark.objects.all()
     serializer_class = SubjectMarkSerializer
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_serializer_context(self):
+        """Passes the request context to the serializer so request.FILES can be accessed"""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Test copy file ko specifically delete / clear karne ke liye action
     @action(detail=True, methods=['post', 'delete'])
