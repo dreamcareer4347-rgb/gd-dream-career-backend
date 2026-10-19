@@ -2,7 +2,7 @@
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from .models import Student, ContactInquiry, FeePayment, SubjectMark, AdminCredential
 from .serializers import (
     StudentSerializer, 
@@ -52,7 +52,6 @@ def get_student_performance(request):
         written_pct = get_skill_avg(['written performance'])
         math_pct = get_skill_avg(['math improvement'])
 
-        # Pass request context so nested serializers can resolve file/Cloudinary URLs correctly
         serializer = StudentSerializer(student, context={'request': request})
         data = dict(serializer.data)
 
@@ -98,7 +97,7 @@ def submit_inquiry(request):
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all().order_by('-created_at')
     serializer_class = StudentSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -107,23 +106,20 @@ class StudentViewSet(viewsets.ModelViewSet):
                 self.perform_create(serializer)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except Exception as e:
-                print("DB SAVE ERROR:", str(e))
                 return Response({"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-        print("SERIALIZER ERRORS:", serializer.errors)
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class FeePaymentViewSet(viewsets.ModelViewSet):
     queryset = FeePayment.objects.all()
     serializer_class = FeePaymentSerializer
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
 
 class SubjectMarkViewSet(viewsets.ModelViewSet):
     queryset = SubjectMark.objects.all()
     serializer_class = SubjectMarkSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser)  # <-- JSONParser added here to fix 415 error
 
     def get_serializer_context(self):
-        """Passes the request context to the serializer so request.FILES can be accessed"""
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
@@ -144,15 +140,7 @@ class SubjectMarkViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Test copy file ko specifically delete / clear karne ke liye action
-    @action(detail=True, methods=['post', 'delete'])
-    def delete_test_copy(self, request, pk=None):
-        instance = self.get_object()
-        instance.test_copy = None
-        instance.test_copy_name = None
-        instance.save()
-        return Response({"success": True, "message": "Test copy deleted successfully!"}, status=200)
-
 class ContactInquiryViewSet(viewsets.ModelViewSet):
     queryset = ContactInquiry.objects.all().order_by('-created_at')
     serializer_class = ContactInquirySerializer
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
