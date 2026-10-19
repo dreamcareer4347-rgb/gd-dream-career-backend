@@ -18,7 +18,7 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'subject_name', 'max_marks', 'obtained_marks', 'status', 'test_copy', 'test_copy_name']
 
     def to_representation(self, instance):
-        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL"""
+        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL with proper .pdf extension for PDFs"""
         representation = super().to_representation(instance)
         if instance.test_copy:
             try:
@@ -40,6 +40,15 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                 # Clean up any hex/unicode encoding or double backslashes in URL paths
                 if '%5C' in url or '\\' in url:
                     url = url.replace('%5C', '').replace('\\', '')
+                
+                # Ensure Cloudinary PDF/combined URLs explicitly end with .pdf for correct raw delivery
+                is_pdf_file = (
+                    str(getattr(instance, 'test_copy_name', '')).lower().endswith('.pdf') or 
+                    '_combined' in url or 
+                    '.pdf' in str(instance.test_copy).lower()
+                )
+                if is_pdf_file and not url.lower().endswith('.pdf'):
+                    url = url + '.pdf'
                 
                 representation['test_copy'] = url
             except Exception:
@@ -88,7 +97,6 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                             save_all=True, 
                             append_images=images[1:]
                         )
-                        # Ensure filename explicitly ends with .pdf so Cloudinary registers it correctly as a raw/document resource
                         pdf_filename = f"{base_name}_combined.pdf"
                         
                         validated_data['test_copy'] = SimpleUploadedFile(
