@@ -18,7 +18,7 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'subject_name', 'max_marks', 'obtained_marks', 'status', 'test_copy', 'test_copy_name']
 
     def to_representation(self, instance):
-        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL without redundant media segments"""
+        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL"""
         representation = super().to_representation(instance)
         if instance.test_copy:
             try:
@@ -27,7 +27,7 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                 else:
                     url = str(instance.test_copy)
                 
-                # Fix redundant /media/ segment in Cloudinary URLs causing 401 ACL failure
+                # Fix redundant /media/ segment in Cloudinary URLs causing 401/404 errors
                 if 'res.cloudinary.com' in url:
                     if '/upload/' in url and '/media/' in url:
                         parts = url.split('/upload/')
@@ -49,14 +49,12 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         return representation
 
     def _process_uploaded_files(self, request, validated_data, instance=None):
-        # Check if files were actually sent in the request
         uploaded_files = request.FILES.getlist('test_copy') if (request and hasattr(request, 'FILES')) else []
         single_file = validated_data.pop('test_copy', None)
 
         if not uploaded_files and single_file:
             uploaded_files = [single_file]
 
-        # Agar koi nayi file nahi aayi hai, toh update ke waqt purani file ko hi retain rakhein
         if not uploaded_files:
             if instance and hasattr(instance, 'test_copy'):
                 validated_data['test_copy'] = instance.test_copy
@@ -90,7 +88,8 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                             save_all=True, 
                             append_images=images[1:]
                         )
-                        pdf_filename = f"{base_name}_combined_copy.pdf"
+                        # Ensure filename explicitly ends with .pdf so Cloudinary registers it correctly as a raw/document resource
+                        pdf_filename = f"{base_name}_combined.pdf"
                         
                         validated_data['test_copy'] = SimpleUploadedFile(
                             pdf_filename, 
