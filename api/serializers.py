@@ -18,16 +18,20 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'subject_name', 'max_marks', 'obtained_marks', 'status', 'test_copy', 'test_copy_name']
 
     def to_representation(self, instance):
-        """Ensures that when fetching data, test_copy returns the clean Cloudinary URL string"""
+        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL"""
         representation = super().to_representation(instance)
         if instance.test_copy:
             try:
                 if hasattr(instance.test_copy, 'url'):
-                    representation['test_copy'] = str(instance.test_copy.url)
+                    url = str(instance.test_copy.url)
                 else:
-                    url_str = str(instance.test_copy)
-                    if url_str.startswith('http'):
-                        representation['test_copy'] = url_str
+                    url = str(instance.test_copy)
+                
+                # Clean up any hex/unicode encoding or double backslashes in URL paths
+                if '%5C' in url or '\\' in url:
+                    url = url.replace('%5C', '').replace('\\', '')
+                
+                representation['test_copy'] = url
             except Exception:
                 representation['test_copy'] = None
         else:
