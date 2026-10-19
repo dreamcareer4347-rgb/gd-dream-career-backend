@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import os
 
@@ -22,10 +21,18 @@ SECRET_KEY = os.getenv(
     "django-insecure-change-this-key-for-local-development-only"
 )
 
-# Local development and Render production settings
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+# Local development ke liye True, production ke liye False (Environment variable se control hoga)
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["*"]
+# Production hosts aur aapke naye domain ke liye allowed hosts
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".onrender.com",
+    "gddreamcareer.online",
+    "www.gddreamcareer.online",
+]
+
 # --------------------------------------------------
 # CLOUDINARY CONFIGURATION
 # --------------------------------------------------
@@ -123,8 +130,6 @@ if DATABASE_URL:
         )
     }
 else:
-    # Allows Django to start without Neon credentials.
-    # Database operations require DATABASE_URL to be configured.
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -203,28 +208,23 @@ STORAGES = {
 MEDIA_URL = "/media/"
 
 # --------------------------------------------------
-# CORS CONFIGURATION
+# CORS CONFIGURATION (Updated with new domain)
 # --------------------------------------------------
 
-# Local Next.js frontend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://gd-dream-career-frontend.vercel.app",
+    "https://gddreamcareer.online",
+    "https://www.gddreamcareer.online",
 ]
 
 # --------------------------------------------------
-# DEFAULT PRIMARY KEY
+# DEFAULT PRIMARY KEY & MEMORY OPTIMIZATION
 # --------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-# settings.py me add / update karein
-
-# DEBUG ko Production par False rakhein (DEBUG=True hone par Django har SQL query ko RAM me cache karta hai)
-DEBUG = False
-
-# File uploads memory buffer optimize karne ke liye
-FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB (is se badi file temporary disk par jayegi, RAM override nahi hogi)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB
+# File uploads memory buffer optimization
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880   # 5 MB
