@@ -18,7 +18,7 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'subject_name', 'max_marks', 'obtained_marks', 'status', 'test_copy', 'test_copy_name']
 
     def to_representation(self, instance):
-        """Ensures that when fetching data, test_copy returns the correct Cloudinary URL keeping the media folder and raw/image type intact"""
+        """Ensures that when fetching data, test_copy returns the clean Cloudinary URL by removing local media prefix"""
         representation = super().to_representation(instance)
         if instance.test_copy:
             try:
@@ -31,9 +31,12 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                 if '%5C' in url or '\\' in url:
                     url = url.replace('%5C', '').replace('\\', '')
                 
-                    
-                # PDFs aur combined files ke liye Cloudinary 'raw/upload' use karta hai, media folder ke sath
+                # For Cloudinary URLs, remove the local 'media/' segment since Cloudinary stores raw files directly under folder names
                 if 'res.cloudinary.com' in url:
+                    if '/media/' in url:
+                        url = url.replace('/media/', '/')
+                    
+                    # Ensure PDFs or combined files use raw/upload endpoint
                     is_pdf_or_doc = '_combined' in url or str(getattr(instance, 'test_copy_name', '')).lower().endswith('.pdf') or '.pdf' in url.lower()
                     if is_pdf_or_doc and '/image/upload/' in url:
                         url = url.replace('/image/upload/', '/raw/upload/')
