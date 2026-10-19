@@ -18,7 +18,7 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'subject_name', 'max_marks', 'obtained_marks', 'status', 'test_copy', 'test_copy_name']
 
     def to_representation(self, instance):
-        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL"""
+        """Ensures that when fetching data, test_copy returns a clean, direct Cloudinary URL without redundant media segments"""
         representation = super().to_representation(instance)
         if instance.test_copy:
             try:
@@ -26,6 +26,16 @@ class SubjectMarkSerializer(serializers.ModelSerializer):
                     url = str(instance.test_copy.url)
                 else:
                     url = str(instance.test_copy)
+                
+                # Fix redundant /media/ segment in Cloudinary URLs causing 401 ACL failure
+                if 'res.cloudinary.com' in url:
+                    if '/upload/' in url and '/media/' in url:
+                        parts = url.split('/upload/')
+                        if len(parts) == 2:
+                            sub_path = parts[1]
+                            if '/media/' in sub_path:
+                                sub_path = sub_path.replace('/media/', '/')
+                            url = f"{parts[0]}/upload/{sub_path}"
                 
                 # Clean up any hex/unicode encoding or double backslashes in URL paths
                 if '%5C' in url or '\\' in url:
